@@ -1,8 +1,8 @@
-const { UserModel } = require("../db/contacts.model");
+const { ContactModel } = require("../../db/contacts.model");
 
 const listContacts = async (req, res, next) => {
   try {
-    const contacts = await UserModel.find();
+    const contacts = await ContactModel.find({owner:req.userId});
     res.json(contacts);
   } catch (error) {
     console.log(error.message);
@@ -12,16 +12,16 @@ const getContactById = async (req, res, next) => {
   try {
     const id = req.params.contactId;
 
-    const contact = await UserModel.findById(id);
+    const contact = await ContactModel.findOne({_id:id,owner:req.userId});
     res.json(contact);
   } catch (error) {
-    console.log(error.message);
+    
     res.status(404).json({ message: "Not found" });
   }
 };
 const addContact = async (req, res, next) => {
   try {
-    const newContact = await UserModel.create(req.body);
+    const newContact = await ContactModel.create({...req.body,owner:req.userId });
     res.status(201).json(newContact);
   } catch (error) {
     console.log(error.message);
@@ -31,7 +31,7 @@ const addContact = async (req, res, next) => {
 const removeContact = async (req, res, next) => {
   try {
     const id = req.params.contactId;
-    await UserModel.findByIdAndRemove(id);
+    await ContactModel.findOneAndRemove({_id:id,owner:req.userId});
     res.json({ message: "contact deleted" });
   } catch (error) {
     console.log(error.message);
@@ -45,12 +45,13 @@ const updateContact = async (req, res, next) => {
     if (!isFieldExist) {
       return res.status(400).json({ message: "missing fields" });
     } else {
-      const upDateContact = await UserModel.findByIdAndUpdate(id, req.body, {
+      const upDateContact = await ContactModel.findOneAndUpdate({_id:id, owner:req.userId}, req.body, {
         new: true,
       });
       res.json(upDateContact);
     }
   } catch (error) {
+    // throw new Error()
     res.status(404).json({ message: "Not found" });
     console.log(error.message);
   }
@@ -63,7 +64,7 @@ const updateStatusContact = async (req, res, next) => {
     if (!req.body.favorite)
       return res.status(400).json({ message: "missing field favorite" });
     else {
-      const upDateContact = await UserModel.findByIdAndUpdate(id, req.body, {
+      const upDateContact = await ContactModel.findOneAndUpdate({_id:id, owner:req.userId}, req.body, {
         new: true,
       });
       res.json(upDateContact);
