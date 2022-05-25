@@ -2,6 +2,7 @@ const { UserModel } = require("../db/users.model");
 const {Conflict, NotFound, Forbidden} = require('http-errors');
 const bcryptjs = require("bcryptjs");
 const {getConfig }= require('../config');
+const gravatar = require('gravatar');
 // const res = require("express/lib/response");
 const jwt = require ('jsonwebtoken')
 
@@ -19,9 +20,12 @@ if(!!existingUser) {
 
 const {bcryptCostFactor} = getConfig();
  const hashPassord = await bcryptjs.hash(password, bcryptCostFactor);
+
+ const url = gravatar.url("email");
  
+
  const user = await UserModel.create({
-     username, email, password: hashPassord
+     username, email, password: hashPassord, avatarURL: url
  })
 
  return user
