@@ -4,17 +4,18 @@ const Jimp = require('jimp');
 const dotenv = require('dotenv')
 
 dotenv.config({path: path.join(__dirname, ".env")})
+
 const sgMail = require('@sendgrid/mail')
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-console.log('process.env.SENDGRID_API_KEY', process.env.SENDGRID_API_KEY)
-// sgMail.setApiKey('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')
+
+
 
 
 const {NotFound,InvalidUserDataError,ValidationError}= require('http-errors')
 const { UserModel } = require("../db/users.model")
 
 const NEW_FILE_DIR = path.resolve(process.cwd(), "public/avatars");
-console.log('NEW_FILE_DIR', NEW_FILE_DIR)
+
 
 const getCurrentUser = async(userId)=>{
 
@@ -52,23 +53,25 @@ const updateAvatar = async(id,file)=>{
 
 }
 
-const verifyUser = async(body)=>{
+const verifyUser = async(body,res)=>{
   const { email } = body;
 
   if (!email) {
     throw new ValidationError("Missing required field email");
   }
+const myEmail=process.env.VARIFICATION_MAIL
+
 
   const user = await UserModel.findOne({ email });
 
   if (user.verify === true) {
-    throw new ValidationError("Verification has already been passed");
+    return res.json({message: "Verification has already been passed"});
   }
- 
+
 
   const msg = {
     to: email,
-    from: "ivaschenko_u@ukr.net",
+    from: myEmail,
     subject: "Сonfirm your mail",
     text: "link for email verification",
     html: `<strong>Link for email verification :</strong><a href="http://localhost:3000/api/users/verify/${user.verificationToken}">go for confirmation</a>`,
@@ -94,17 +97,7 @@ const verificationUserToken = async(userToken)=>{
     throw new InvalidUserDataError("User not found");
   }
 
-  // const updateUserVarificationToken = await UserModel.updateOne({varificationToken:userToken},{ verificationToken: null, verify: true
-  // } , {
-  //   new: true,
-  // });
-  // console.log('updateUserVarificationToken', updateUserVarificationToken)
-  // return updateUserVarificationToken
-
-  // user.verificationToken = "null";
-  // user.verify = true;
-
-  // await user.save();
+ 
   user.verificationToken = "null";
   user.verify = true;
 

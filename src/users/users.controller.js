@@ -20,7 +20,7 @@ const updateUserByAvatar = await updateAvatar(req.userId , req.file )
 
 userRouter.post('/verify', async(req,res,next)=>{
 
-    await verifyUser(req.body);
+    await verifyUser(req.body,res);
   res.status(200).json({ message: "Verification email sent" });
     })
 
