@@ -1,8 +1,16 @@
 const path = require ('path')
 const fs = require("fs").promises;
 const Jimp = require('jimp');
+const dotenv = require('dotenv')
 
-const {NotFound}= require('http-errors')
+dotenv.config({path: path.join(__dirname, ".env")})
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+console.log('process.env.SENDGRID_API_KEY', process.env.SENDGRID_API_KEY)
+// sgMail.setApiKey('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')
+
+
+const {NotFound,InvalidUserDataError,ValidationError}= require('http-errors')
 const { UserModel } = require("../db/users.model")
 
 const NEW_FILE_DIR = path.resolve(process.cwd(), "public/avatars");
@@ -44,8 +52,71 @@ const updateAvatar = async(id,file)=>{
 
 }
 
+const verifyUser = async(body)=>{
+  const { email } = body;
+
+  if (!email) {
+    throw new ValidationError("Missing required field email");
+  }
+
+  const user = await UserModel.findOne({ email });
+
+  if (user.verify === true) {
+    throw new ValidationError("Verification has already been passed");
+  }
+ 
+
+  const msg = {
+    to: email,
+    from: "ivaschenko_u@ukr.net",
+    subject: "Сonfirm your mail",
+    text: "link for email verification",
+    html: `<strong>Link for email verification :</strong><a href="http://localhost:3000/api/users/verify/${user.verificationToken}">go for confirmation</a>`,
+  };
+
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log("Email sent");
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
+}
+
+const verificationUserToken = async(userToken)=>{
+  const user = await UserModel.findOne({ userToken });
+  console.log('user', user)
+ 
+
+  if (!user) {
+    throw new InvalidUserDataError("User not found");
+  }
+
+  // const updateUserVarificationToken = await UserModel.updateOne({varificationToken:userToken},{ verificationToken: null, verify: true
+  // } , {
+  //   new: true,
+  // });
+  // console.log('updateUserVarificationToken', updateUserVarificationToken)
+  // return updateUserVarificationToken
+
+  // user.verificationToken = "null";
+  // user.verify = true;
+
+  // await user.save();
+  user.verificationToken = "null";
+  user.verify = true;
+
+  await user.save();
+
+}
+
 module.exports ={
     getCurrentUser,
-    updateAvatar
+    updateAvatar,
+    verificationUserToken,
+    verifyUser
+
 }
 // exports.getCurrentUser=getCurrentUser

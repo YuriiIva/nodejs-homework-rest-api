@@ -30,7 +30,8 @@ authRouter.post('/login', addUserValidSignIn, async(req, res, next)=>{
     // 6. generate JWT token +
     // 7. send succesful respons
 
-    const {user, token} = await signIn(req.body);
+    const {user, token} = await signIn(req.body,res);
+  
     res.status(200).send(serializerUserResponse(user,token))
 })
 
